@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Download, TrendingUp, DollarSign, FileText, Mail } from 'lucide-react';
+import { Download, TrendingUp, DollarSign, FileText, Mail, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -11,6 +11,12 @@ interface FinancialResults {
   revenue: number | null;
   netIncome: number | null;
   operatingIncome: number | null;
+  grossProfit: number | null;
+  totalExpenses: number | null;
+  profitBeforeTax: number | null;
+  monthlyRevenue: Array<{ month: string; revenue: number }>;
+  expenseBreakdown: Array<{ category: string; amount: number }>;
+  aiGeneratedSummary: string | null;
 }
 
 interface ReportDisplayProps {
@@ -81,7 +87,7 @@ const ReportDisplay: React.FC<ReportDisplayProps> = ({
   return (
     <div className="space-y-6">
       {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* EBITDA Card */}
         <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
           <CardHeader className="pb-3">
@@ -127,19 +133,68 @@ const ReportDisplay: React.FC<ReportDisplayProps> = ({
             </div>
           </div>
         </Card>
+
+        {/* P&L Summary Card */}
+        <Card className="relative overflow-hidden border-l-4 border-l-purple-500">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center text-lg">
+              <Receipt className="mr-2 h-5 w-5 text-purple-600" />
+              Net Income
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-gray-900 mb-2">
+              {formatCurrency(results.netIncome)}
+            </div>
+            <p className="text-sm text-gray-600">
+              Profit & Loss Bottom Line
+            </p>
+          </CardContent>
+          <div className="absolute top-0 right-0 p-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+        </Card>
       </div>
 
+      {/* P&L Detailed Metrics */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Receipt className="mr-2 h-5 w-5 text-purple-600" />
+            Profit & Loss Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+              <p className="text-sm font-medium text-green-700 mb-1">Gross Profit</p>
+              <p className="text-xl font-bold text-green-800">{formatCurrency(results.grossProfit)}</p>
+            </div>
+            <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+              <p className="text-sm font-medium text-red-700 mb-1">Total Expenses</p>
+              <p className="text-xl font-bold text-red-800">{formatCurrency(results.totalExpenses)}</p>
+            </div>
+            <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm font-medium text-blue-700 mb-1">Profit Before Tax</p>
+              <p className="text-xl font-bold text-blue-800">{formatCurrency(results.profitBeforeTax)}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Additional Financial Metrics */}
-      {(results.revenue || results.netIncome || results.operatingIncome) && (
+      {(results.revenue || results.operatingIncome) && (
         <Card>
           <CardHeader>
             <CardTitle>Additional Financial Metrics</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {results.revenue !== null && (
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-600 mb-1">Revenue</p>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Revenue</p>
                   <p className="text-xl font-bold text-gray-900">{formatCurrency(results.revenue)}</p>
                 </div>
               )}
@@ -147,12 +202,6 @@ const ReportDisplay: React.FC<ReportDisplayProps> = ({
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm font-medium text-gray-600 mb-1">Operating Income</p>
                   <p className="text-xl font-bold text-gray-900">{formatCurrency(results.operatingIncome)}</p>
-                </div>
-              )}
-              {results.netIncome !== null && (
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-600 mb-1">Net Income</p>
-                  <p className="text-xl font-bold text-gray-900">{formatCurrency(results.netIncome)}</p>
                 </div>
               )}
             </div>
@@ -170,7 +219,7 @@ const ReportDisplay: React.FC<ReportDisplayProps> = ({
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
             >
               <Download className="mr-2 h-5 w-5" />
-              Download Full Report
+              Download Comprehensive Report
             </Button>
             
             <Button 
@@ -199,9 +248,9 @@ const ReportDisplay: React.FC<ReportDisplayProps> = ({
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Analysis Summary</h3>
             <p className="text-gray-700 leading-relaxed">
-              The financial analysis has been completed successfully. The EBITDA represents the company's 
-              operational profitability, while the DCF valuation provides an intrinsic value estimate 
-              based on projected cash flows.
+              The comprehensive financial analysis includes EBITDA operational metrics, DCF valuation, 
+              detailed P&L breakdown, and AI-generated insights. All calculations follow standard 
+              financial modeling practices and accounting principles.
             </p>
             <Separator className="my-4" />
             <p className="text-sm text-gray-600">
