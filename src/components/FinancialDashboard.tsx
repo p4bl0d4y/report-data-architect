@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { 
   BarChart3, 
@@ -7,7 +6,8 @@ import {
   PieChart, 
   Calendar,
   Download,
-  Filter
+  Filter,
+  Home
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,7 @@ interface FinancialDashboardProps {
   reportsData: ReportData[];
   isLoading: boolean;
   error: string | null;
+  onBackToHome?: () => void;
 }
 
 type SelectedReportType = 'EBITDA' | 'DCF' | 'P&L' | 'Summary';
@@ -44,7 +45,8 @@ type TimeFilter = 'Year' | 'Month' | 'Week' | 'Day';
 const FinancialDashboard: React.FC<FinancialDashboardProps> = ({
   reportsData,
   isLoading,
-  error
+  error,
+  onBackToHome
 }) => {
   const [selectedReportType, setSelectedReportType] = useState<SelectedReportType>('Summary');
   const [selectedTimeFilter, setSelectedTimeFilter] = useState<TimeFilter>('Month');
@@ -253,6 +255,22 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({
             </div>
             
             <nav className="space-y-2">
+              {/* Home Button */}
+              {onBackToHome && (
+                <>
+                  <button
+                    onClick={onBackToHome}
+                    className="w-full flex items-center px-3 py-3 rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  >
+                    <Home className="w-5 h-5 text-gray-600" />
+                    {sidebarOpen && (
+                      <span className="ml-3 font-medium">Home</span>
+                    )}
+                  </button>
+                  <Separator className="my-2" />
+                </>
+              )}
+
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = selectedReportType === item.id;

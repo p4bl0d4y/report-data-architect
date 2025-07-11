@@ -31,6 +31,43 @@ const Index = () => {
   const [currentStep, setCurrentStep] = useState('');
   const [reportsData, setReportsData] = useState<ReportData[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'home' | 'dashboard'>('home');
+
+  // Mock historical data for demonstration
+  const mockHistoricalData: ReportData[] = [
+    {
+      id: 'historical-1',
+      timestamp: '2024-06-15T10:30:00Z',
+      reportType: 'EBITDA',
+      ebitda: 1180000,
+      monthlyBreakdown: [
+        { month: 'Jan', value: 350000 },
+        { month: 'Feb', value: 420000 },
+        { month: 'Mar', value: 410000 }
+      ],
+      downloadUrl: '/api/download-historical-ebitda'
+    },
+    {
+      id: 'historical-2',
+      timestamp: '2024-06-15T10:30:00Z',
+      reportType: 'DCF',
+      dcf: 14500000,
+      downloadUrl: '/api/download-historical-dcf'
+    },
+    {
+      id: 'historical-3',
+      timestamp: '2024-06-15T10:30:00Z',
+      reportType: 'P&L',
+      profitAndLoss: {
+        revenue: 4800000,
+        cogs: 1900000,
+        grossProfit: 2400000,
+        operatingExpenses: 1650000,
+        netIncome: 750000
+      },
+      downloadUrl: '/api/download-historical-pl'
+    }
+  ];
 
   const simulateProcessing = async (file: File) => {
     setIsProcessing(true);
@@ -96,6 +133,7 @@ const Index = () => {
 
       setReportsData(mockReports);
       setProcessingStatus('completed');
+      setCurrentView('dashboard'); // Navigate to dashboard after processing
       
       toast({
         title: "Comprehensive Analysis Complete",
@@ -121,12 +159,25 @@ const Index = () => {
     simulateProcessing(file);
   };
 
-  if (processingStatus === 'completed' && reportsData.length > 0) {
+  const handleViewHistory = () => {
+    setCurrentView('dashboard');
+    setReportsData(mockHistoricalData);
+  };
+
+  const handleBackToHome = () => {
+    setCurrentView('home');
+    setProcessingStatus('idle');
+    setReportsData([]);
+    setError(null);
+  };
+
+  if (currentView === 'dashboard') {
     return (
       <FinancialDashboard
         reportsData={reportsData}
         isLoading={false}
         error={null}
+        onBackToHome={handleBackToHome}
       />
     );
   }
@@ -194,6 +245,16 @@ const Index = () => {
 
         {/* Main Content */}
         <div className="max-w-6xl mx-auto space-y-8">
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <button
+              onClick={handleViewHistory}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              View Historical Reports
+            </button>
+          </div>
+
           {/* File Upload Section */}
           {processingStatus === 'idle' && (
             <FileUpload 
