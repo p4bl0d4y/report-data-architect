@@ -1,27 +1,27 @@
+
 import React, { useState } from 'react';
 import { BarChart3, FileSpreadsheet, TrendingUp, PieChart, Brain } from 'lucide-react';
 import FileUpload from '@/components/FileUpload';
 import ProcessingStatus from '@/components/ProcessingStatus';
-import ReportDisplay from '@/components/ReportDisplay';
-import OverallAnalysis from '@/components/OverallAnalysis';
+import FinancialDashboard from '@/components/FinancialDashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 
-interface FinancialResults {
-  ebitda: number | null;
-  dcf: number | null;
-  revenue: number | null;
-  netIncome: number | null;
-  operatingIncome: number | null;
-  // P&L specific data
-  grossProfit: number | null;
-  totalExpenses: number | null;
-  profitBeforeTax: number | null;
-  // Chart data
-  monthlyRevenue: Array<{ month: string; revenue: number }>;
-  expenseBreakdown: Array<{ category: string; amount: number }>;
-  // Overall analysis
-  aiGeneratedSummary: string | null;
+interface ReportData {
+  id: string;
+  timestamp: string;
+  reportType: 'EBITDA' | 'DCF' | 'P&L';
+  ebitda?: number | null;
+  dcf?: number | null;
+  profitAndLoss?: {
+    revenue: number;
+    cogs: number;
+    grossProfit: number;
+    operatingExpenses: number;
+    netIncome: number;
+  };
+  monthlyBreakdown?: Array<{ month: string; value: number }>;
+  downloadUrl?: string;
 }
 
 const Index = () => {
@@ -29,20 +29,7 @@ const Index = () => {
   const [processingStatus, setProcessingStatus] = useState<'idle' | 'processing' | 'completed' | 'error'>('idle');
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState('');
-  const [results, setResults] = useState<FinancialResults>({
-    ebitda: null,
-    dcf: null,
-    revenue: null,
-    netIncome: null,
-    operatingIncome: null,
-    grossProfit: null,
-    totalExpenses: null,
-    profitBeforeTax: null,
-    monthlyRevenue: [],
-    expenseBreakdown: [],
-    aiGeneratedSummary: null
-  });
-  const [reportDownloadUrl, setReportDownloadUrl] = useState<string | null>(null);
+  const [reportsData, setReportsData] = useState<ReportData[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const simulateProcessing = async (file: File) => {
@@ -68,36 +55,46 @@ const Index = () => {
         await new Promise(resolve => setTimeout(resolve, 1200));
       }
 
-      // Simulate comprehensive financial analysis
-      const mockResults: FinancialResults = {
-        ebitda: 1250000 + Math.random() * 500000,
-        dcf: 15000000 + Math.random() * 5000000,
-        revenue: 5000000 + Math.random() * 2000000,
-        netIncome: 800000 + Math.random() * 300000,
-        operatingIncome: 1100000 + Math.random() * 400000,
-        grossProfit: 2500000 + Math.random() * 800000,
-        totalExpenses: 1800000 + Math.random() * 600000,
-        profitBeforeTax: 900000 + Math.random() * 350000,
-        monthlyRevenue: [
-          { month: 'Jan', revenue: 400000 + Math.random() * 100000 },
-          { month: 'Feb', revenue: 380000 + Math.random() * 100000 },
-          { month: 'Mar', revenue: 420000 + Math.random() * 100000 },
-          { month: 'Apr', revenue: 450000 + Math.random() * 100000 },
-          { month: 'May', revenue: 430000 + Math.random() * 100000 },
-          { month: 'Jun', revenue: 480000 + Math.random() * 100000 }
-        ],
-        expenseBreakdown: [
-          { category: 'Operations', amount: 600000 + Math.random() * 200000 },
-          { category: 'Marketing', amount: 300000 + Math.random() * 100000 },
-          { category: 'Personnel', amount: 500000 + Math.random() * 150000 },
-          { category: 'Administrative', amount: 200000 + Math.random() * 80000 },
-          { category: 'Other', amount: 150000 + Math.random() * 60000 }
-        ],
-        aiGeneratedSummary: "Based on the financial analysis, the company shows strong operational performance with healthy EBITDA margins. Revenue growth is consistent across quarters, with particularly strong performance in Q2. The expense structure appears well-managed, though there may be opportunities for optimization in marketing spend efficiency."
-      };
+      // Simulate comprehensive financial analysis with multiple reports
+      const mockReports: ReportData[] = [
+        {
+          id: 'report-1',
+          timestamp: new Date().toISOString(),
+          reportType: 'EBITDA',
+          ebitda: 1250000 + Math.random() * 500000,
+          monthlyBreakdown: [
+            { month: 'Jan', value: 400000 + Math.random() * 100000 },
+            { month: 'Feb', value: 380000 + Math.random() * 100000 },
+            { month: 'Mar', value: 420000 + Math.random() * 100000 },
+            { month: 'Apr', value: 450000 + Math.random() * 100000 },
+            { month: 'May', value: 430000 + Math.random() * 100000 },
+            { month: 'Jun', value: 480000 + Math.random() * 100000 }
+          ],
+          downloadUrl: '/api/download-ebitda-report'
+        },
+        {
+          id: 'report-2',
+          timestamp: new Date().toISOString(),
+          reportType: 'DCF',
+          dcf: 15000000 + Math.random() * 5000000,
+          downloadUrl: '/api/download-dcf-report'
+        },
+        {
+          id: 'report-3',
+          timestamp: new Date().toISOString(),
+          reportType: 'P&L',
+          profitAndLoss: {
+            revenue: 5000000 + Math.random() * 2000000,
+            cogs: 2000000 + Math.random() * 800000,
+            grossProfit: 2500000 + Math.random() * 800000,
+            operatingExpenses: 1800000 + Math.random() * 600000,
+            netIncome: 800000 + Math.random() * 300000
+          },
+          downloadUrl: '/api/download-pl-report'
+        }
+      ];
 
-      setResults(mockResults);
-      setReportDownloadUrl('/api/download-comprehensive-report');
+      setReportsData(mockReports);
       setProcessingStatus('completed');
       
       toast({
@@ -124,12 +121,15 @@ const Index = () => {
     simulateProcessing(file);
   };
 
-  const handleEmailReport = () => {
-    toast({
-      title: "Email Sent",
-      description: "The comprehensive financial report has been sent to your email address.",
-    });
-  };
+  if (processingStatus === 'completed' && reportsData.length > 0) {
+    return (
+      <FinancialDashboard
+        reportsData={reportsData}
+        isLoading={false}
+        error={null}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -209,25 +209,6 @@ const Index = () => {
             currentStep={currentStep}
             error={error}
           />
-
-          {/* Results Display */}
-          {processingStatus === 'completed' && (
-            <>
-              <ReportDisplay 
-                results={results}
-                reportDownloadUrl={reportDownloadUrl}
-                isLoading={false}
-                error={null}
-                onEmailReport={handleEmailReport}
-              />
-              
-              <OverallAnalysis 
-                results={results}
-                isLoading={false}
-                error={null}
-              />
-            </>
-          )}
         </div>
 
         {/* Footer */}
